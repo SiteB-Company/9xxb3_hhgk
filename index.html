@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create A Dino</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Creepster&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a4d3a 50%, #0d2818 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .menu-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: radial-gradient(circle at center, rgba(26, 77, 58, 0.3) 0%, transparent 70%);
+        }
+
+        .game-title {
+            font-family: 'Creepster', cursive;
+            font-size: clamp(3rem, 8vw, 6rem);
+            color: #4ade80;
+            text-shadow: 0 0 20px #4ade80, 0 0 40px #4ade80, 0 0 60px #4ade80;
+            margin-bottom: 2rem;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px #4ade80, 0 0 40px #4ade80, 0 0 60px #4ade80; }
+            to { text-shadow: 0 0 30px #4ade80, 0 0 60px #4ade80, 0 0 90px #4ade80; }
+        }
+
+        .menu-button {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            margin: 10px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .menu-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.5);
+        }
+
+        .menu-button:active {
+            transform: translateY(0);
+        }
+
+        .game-interface {
+            display: none;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 30%, #15803d 100%);
+            position: relative;
+            overflow: hidden;
+            padding-top: 80px; /* Espaço para botões no topo */
+        }
+
+        .grass-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(21, 128, 61, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(34, 197, 94, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(22, 163, 74, 0.2) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .incubators-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .incubator {
+            background: linear-gradient(135deg, #8b4513 0%, #654321 100%);
+            border: 3px solid #654321;
+            border-radius: 15px;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.3), 0 4px 10px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .incubator.selected {
+            border-color: white;
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        .incubator.occupied {
+            cursor: not-allowed;
+        }
+
+        .egg {
+            width: 60px;
+            height: 75px;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+            margin-bottom: 10px;
+            animation: subtle-bounce 3s ease-in-out infinite;
+        }
+
+        .egg.common {
+            background: linear-gradient(135deg, #f8f8f8 0%, #e0e0e0 100%);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .egg.golden {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+            box-shadow: 0 4px 8px rgba(255,215,0,0.5);
+        }
+
+        .egg.giant {
+            transform: scale(1.2);
+            background: linear-gradient(135deg, #f0f0f0 0%, #d0d0d0 100%);
+        }
+
+        .egg.colorful {
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 25%, #45b7d1 50%, #f9ca24 75%, #f0932b 100%);
+            animation: color-shift 2s ease-in-out infinite;
+        }
+
+        .egg.diamond {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 50%, #90caf9 100%);
+            box-shadow: 0 0 20px rgba(144,202,249,0.8);
+        }
+
+        .egg.ruby {
+            background: linear-gradient(135deg, #e91e63 0%, #ad1457 100%);
+            box-shadow: 0 0 25px rgba(233,30,99,0.8);
+        }
+
+        @keyframes subtle-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes color-shift {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        .egg-info {
+            text-align: center;
+            color: #000;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        /* BUG FIX 2: Dinheiro visível e abaixo das incubadoras */
+        .money-display {
+            background: rgba(0,0,0,0.8);
+            color: #4ade80;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            margin: 20px auto 0; /* Centraliza e adiciona margem superior */
+            width: fit-content;   /* Ajusta a largura ao conteúdo */
+            text-align: center;
+        }
+
+        .game-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .side-buttons {
+            position: fixed;
+            right: 20px;
+            top: 20px; /* Alinhado ao topo com o de inventário */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+        
+        /* BUG FIX 1: Botão de inventário no canto superior esquerdo */
+        .top-buttons {
+            position: fixed;
+            top: 20px;
+            left: 20px; /* Alterado de 'right' para 'left' */
+            z-index: 1000;
+        }
+
+        .action-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .buy-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .sell-btn {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+        }
+
+        .stats-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .inventory-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .codes-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .shop-content {
+            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+        }
+
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .shop-item.out-of-stock {
+            background: rgba(239,68,68,0.2);
+            color: #ef4444;
+        }
+
+        .shop-item.out-of-stock .shop-buy-btn {
+            background: #6b7280;
+            cursor: not-allowed;
+        }
+
+        .shop-buy-btn {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .dino-card {
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .dino-card:hover {
+            transform: scale(1.05);
+        }
+
+        .dino-card.selected {
+            border: 3px solid #fbbf24;
+            box-shadow: 0 0 20px rgba(251,191,36,0.5);
+        }
+
+        .how-to-play {
+            color: white;
+            line-height: 1.6;
+        }
+
+        .how-to-play h2 {
+            color: #4ade80;
+            margin-bottom: 15px;
+        }
+
+        .code-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #4ade80;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .code-submit {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            z-index: 3000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-weight: bold;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        @media (max-width: 768px) {
+            .game-interface {
+                padding-top: 100px; /* Mais espaço no mobile */
+            }
+            .game-buttons {
+                flex-direction: column;
+                bottom: 10px;
+                left: auto;
+                right: 10px;
+                transform: none;
+            }
+            
+            .side-buttons {
+                right: 10px;
+                top: 80px; /* Abaixo do botão de inventário */
+                transform: none;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                max-width: 95vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="menu-container" id="menuContainer">
+        <h1 class="game-title">CREATE A DINO</h1>
+        <button class="menu-button" onclick="startGame()">JOGAR</button>
+        <button class="menu-button" onclick="showHowToPlay()">COMO JOGAR</button>
+    </div>
+
+    <div class="game-interface" id="gameInterface">
+        <div class="grass-pattern"></div>
+        
+        <div class="top-buttons">
+            <button class="action-button inventory-btn" onclick="showInventory()">📦 INVENTÁRIO</button>
+        </div>
+        
+        <div class="side-buttons">
+            <button class="action-button codes-btn" onclick="showCodes()">🔑 CÓDIGOS</button>
+        </div>
+
+        <div class="incubators-container" id="incubatorsContainer">
+            <div class="incubator" onclick="selectIncubator(0)"></div>
+            <div class="incubator" onclick="selectIncubator(1)"></div>
+            <div class="incubator" onclick="selectIncubator(2)"></div>
+            <div class="incubator" onclick="selectIncubator(3)"></div>
+            <div class="incubator" onclick="selectIncubator(4)"></div>
+            <div class="incubator" onclick="selectIncubator(5)"></div>
+        </div>
+        
+        <div class="money-display">
+            💰 $<span id="money">500</span>
+        </div>
+        
+        <div class="game-buttons">
+            <button class="action-button buy-btn" onclick="showShop()">🛒 COMPRAR</button>
+            <button class="action-button stats-btn" onclick="showStats()">📊 ESTATÍSTICAS</button>
+            <button class="action-button sell-btn" onclick="showSellInterface()">💰 VENDER</button>
+        </div>
+    </div>
+
+    <div class="modal" id="howToPlayModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('howToPlayModal')">×</button>
+            <div class="how-to-play">
+                <h2>🦕 COMO JOGAR</h2>
+                <p><strong>Objetivo:</strong> Colecione, incube e venda dinossauros para construir seu império pré-histórico!</p>
+                <br>
+                <p><strong>Mecânicas:</strong></p>
+                <p>• Compre ovos de dinossauros na loja</p>
+                <p>• Coloque-os nos incubadores para chocar</p>
+                <p>• Aguarde o tempo de incubação (varia por espécie)</p>
+                <p>• Venda seus dinossauros por lucro</p>
+                <br>
+                <p><strong>Mutações Raras:</strong></p>
+                <p>• Dourado: +5% valor, +3% tempo</p>
+                <p>• Gigante: +10% peso, +8% tamanho</p>
+                <p>• Colorido: +15% valor, -vida</p>
+                <p>• Diamante: +30% valor, +vida</p>
+                <p>• Rubi: +113% valor, +260% vida</p>
+                <br>
+                <p><strong>Dica:</strong> O estoque da loja muda a cada 10 minutos!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="shopModal">
+        <div class="modal-content shop-content">
+            <button class="close-btn" onclick="closeModal('shopModal')">×</button>
+            <h2 style="color: white; margin-bottom: 10px;">🛒 LOJA DE DINOSSAUROS</h2>
+            <div id="shopTimer" style="color: #fbbf24; text-align: center; margin-bottom: 15px; font-size: 1.1rem;"></div>
+            <div id="shopItems"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="inventoryModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('inventoryModal')">×</button>
+            <h2 style="color: white; margin-bottom: 20px;">📦 INVENTÁRIO</h2>
+            <div class="inventory-grid" id="inventoryGrid"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="statsModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('statsModal')">×</button>
+            <h2 style="color: white; margin-bottom: 20px;">📊 ESTATÍSTICAS</h2>
+            <div id="statsContent" style="color: white;"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="codesModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('codesModal')">×</button>
+            <h2 style="color: white; margin-bottom: 20px;">🔑 CÓDIGOS</h2>
+            <input type="text" class="code-input" id="codeInput" placeholder="Digite seu código aqui...">
+            <button class="code-submit" onclick="submitCode()">USAR CÓDIGO</button>
+        </div>
+    </div>
+
+    <div class="modal" id="sellModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('sellModal')">×</button>
+            <h2 style="color: white; margin-bottom: 20px;">💰 VENDER DINOSSAUROS</h2>
+            <div style="margin-bottom: 20px;">
+                <button class="action-button sell-btn" onclick="sellRandom()">🎲 VENDER ALEATÓRIO</button>
+                <button class="action-button sell-btn" onclick="sellAll()">🗑️ VENDER TODOS</button>
+                <button class="action-button sell-btn" onclick="sellSelected()">✅ VENDER SELECIONADO</button>
+            </div>
+            <div class="inventory-grid" id="sellInventoryGrid"></div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Estado do jogo
+        let gameState = {
+            money: 500,
+            incubators: [null, null, null, null, null, null],
+            inventory: [],
+            selectedIncubator: -1,
+            selectedDino: -1,
+            lastStockUpdate: 0,
+            usedCodes: [],
+            konamiSequence: [],
+            lastExitTime: Date.now(),
+            firstLoad: true // FEATURE 2: Flag para primeira vez
+        };
+
+        // Dinossauros disponíveis
+        const dinosaurs = {
+            'Compsognato': { price: 300, time: 300000, size: 'pequeno' }, // 5 min
+            'Microraptor': { price: 1500, time: 900000, size: 'pequeno' }, // 15 min
+            'Indoraptor': { price: 20000, time: 1800000, size: 'pequeno' }, // 30 min
+            'Estegossauro': { price: 20000, time: 2700000, size: 'pequeno' }, // 45 min
+            'Indominus Rex': { price: 50000, time: 3600000, size: 'médio' }, // 1h
+            'Velociraptor': { price: 50000, time: 3600000, size: 'médio' }, // 1h
+            'Pyroraptor': { price: 52000, time: 3900000, size: 'médio' }, // 1h 5min
+            'Megalossauro': { price: 64000, time: 4500000, size: 'médio' }, // 1h 15min
+            'Triceratops': { price: 76000, time: 5400000, size: 'grande' }, // 3h
+            'Braquiossauro': { price: 450000, time: 11700000, size: 'grande' }, // 3h 15min
+            'Diplodoco': { price: 480000, time: 12600000, size: 'grande' }, // 3h 30min
+            'Majungassauro': { price: 495000, time: 13500000, size: 'grande' }, // 3h 45min
+            'Brontossauro': { price: 500000, time: 13800000, size: 'grande' }, // 3h 50min
+            'Tiranossauro Rex': { price: 500000, time: 13800000, size: 'grande' }, // 3h 50min
+            'Espinossauro': { price: 950500, time: 13800000, size: 'grande' } // 3h 50min
+        };
+
+        let currentStock = [];
+        let stockBoosts = {
+            pequeno: 0,
+            médio: 0,
+            grande: 0
+        };
+        // FEATURE 1: Variável para o intervalo do timer da loja
+        let shopTimerInterval = null;
+
+        // Inicialização
+        function init() {
+            createStars();
+            loadGameState();
+            updateStockIfNeeded();
+            updateIncubators();
+            setInterval(updateIncubators, 1000);
+            setInterval(updateStockIfNeeded, 60000);
+            
+            // Salvar estado a cada 10 segundos
+            setInterval(saveGameState, 10000);
+            
+            // Detectar saída da página
+            window.addEventListener('beforeunload', saveGameState);
+        }
+
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 2 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('menuContainer').style.display = 'none';
+            document.getElementById('gameInterface').style.display = 'block';
+            updateMoneyDisplay();
+        }
+
+        function showHowToPlay() {
+            document.getElementById('howToPlayModal').style.display = 'block';
+        }
+
+        function updateMoneyDisplay() {
+            document.getElementById('money').textContent = gameState.money.toLocaleString();
+        }
+
+        function selectIncubator(index) {
+            if (gameState.incubators[index] !== null) {
+                return; // Incubador ocupado
+            }
+            
+            // Limpar seleção anterior
+            document.querySelectorAll('.incubator').forEach(inc => inc.classList.remove('selected'));
+            
+            // Selecionar novo
+            gameState.selectedIncubator = index;
+            document.querySelectorAll('.incubator')[index].classList.add('selected');
+        }
+
+        function updateStockIfNeeded() {
+            const now = Date.now();
+            const STOCK_DURATION = 600000; // 10 minutos
+            if (now - gameState.lastStockUpdate >= STOCK_DURATION) {
+                generateStock();
+                gameState.lastStockUpdate = now;
+            }
+        }
+
+        function generateStock() {
+            const dinoNames = Object.keys(dinosaurs);
+            const stockSize = Math.floor(Math.random() * (dinoNames.length - 2)) + 2; // 2 a length-1
+            
+            currentStock = [];
+            const shuffled = [...dinoNames].sort(() => 0.5 - Math.random());
+            
+            for (let i = 0; i < stockSize; i++) {
+                const dino = shuffled[i];
+                const baseChance = dinosaurs[dino].price > 300000 ? 0.3 : 
+                                 dinosaurs[dino].price > 100000 ? 0.6 : 0.8;
+                
+                const boost = stockBoosts[dinosaurs[dino].size];
+                const chance = Math.min(baseChance + boost, 0.9);
+                
+                if (Math.random() < chance) {
+                    currentStock.push(dino);
+                }
+            }
+            
+            // FEATURE 2: Garantir Compsognato na primeira carga
+            if (gameState.firstLoad) {
+                if (!currentStock.includes('Compsognato')) {
+                    currentStock.unshift('Compsognato'); // Adiciona no início da lista
+                }
+                gameState.firstLoad = false;
+            }
+            
+            // Garantir que sempre há pelo menos um item em estoque
+            if (currentStock.length === 0) {
+                currentStock.push(shuffled[0]);
+            }
+        }
+
+        function showShop() {
+            updateStockIfNeeded();
+            const shopItems = document.getElementById('shopItems');
+            shopItems.innerHTML = '';
+            
+            Object.keys(dinosaurs).forEach(dino => {
+                const item = document.createElement('div');
+                const inStock = currentStock.includes(dino);
+                item.className = `shop-item ${inStock ? '' : 'out-of-stock'}`;
+                
+                item.innerHTML = `
+                    <div>
+                        <div style="font-weight: bold; font-size: 1.1rem;">${dino}</div>
+                        <div>$${dinosaurs[dino].price.toLocaleString()}</div>
+                    </div>
+                    <button class="shop-buy-btn" onclick="buyDino('${dino}')" 
+                            ${inStock ? '' : 'disabled'}>
+                        ${inStock ? 'COMPRAR' : 'FORA DE ESTOQUE'}
+                    </button>
+                `;
+                
+                shopItems.appendChild(item);
+            });
+            
+            // FEATURE 1: Iniciar o timer da loja
+            startShopTimer();
+            document.getElementById('shopModal').style.display = 'block';
+        }
+
+        function startShopTimer() {
+            if (shopTimerInterval) clearInterval(shopTimerInterval); // Limpa timer anterior
+
+            const timerElement = document.getElementById('shopTimer');
+            const STOCK_DURATION = 600000; // 10 minutos
+
+            shopTimerInterval = setInterval(() => {
+                const now = Date.now();
+                const timePassed = now - gameState.lastStockUpdate;
+                const timeRemaining = STOCK_DURATION - timePassed;
+
+                if (timeRemaining <= 0) {
+                    timerElement.innerHTML = 'Reabastecendo estoque...';
+                    updateStockIfNeeded();
+                    // Opcional: recarregar a loja automaticamente
+                    // showShop(); 
+                } else {
+                    const minutes = Math.floor(timeRemaining / 60000);
+                    const seconds = Math.floor((timeRemaining % 60000) / 1000);
+                    timerElement.innerHTML = `Próximo estoque em: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function buyDino(dinoName) {
+            if (!currentStock.includes(dinoName)) {
+                showNotification('Dinossauro fora de estoque!', 'error');
+                return;
+            }
+            
+            const price = dinosaurs[dinoName].price;
+            if (gameState.money < price) {
+                showNotification('Dinheiro insuficiente!', 'error');
+                return;
+            }
+            
+            if (gameState.selectedIncubator === -1) {
+                showNotification('Selecione um incubador primeiro!', 'error');
+                return;
+            }
+            
+            if (gameState.incubators[gameState.selectedIncubator] !== null) {
+                showNotification('Incubador já está ocupado!', 'error');
+                return;
+            }
+            
+            // Processar compra
+            gameState.money -= price;
+            updateMoneyDisplay();
+            
+            // Determinar mutações
+            const mutations = [];
+            if (Math.random() < 0.25) mutations.push('golden');
+            if (Math.random() < 0.10) mutations.push('giant');
+            if (Math.random() < 0.07) mutations.push('colorful');
+            if (Math.random() < 0.05) mutations.push('diamond');
+            if (Math.random() < 0.03) mutations.push('ruby');
+            
+            // Criar ovo
+            const egg = {
+                dino: dinoName,
+                mutations: mutations,
+                startTime: Date.now(),
+                hatchTime: calculateHatchTime(dinoName, mutations)
+            };
+            
+            gameState.incubators[gameState.selectedIncubator] = egg;
+            gameState.selectedIncubator = -1;
+            
+            // Limpar seleção visual
+            document.querySelectorAll('.incubator').forEach(inc => inc.classList.remove('selected'));
+            
+            updateIncubators();
+            closeModal('shopModal');
+            showNotification(`${dinoName} comprado com sucesso!`);
+        }
+
+        function calculateHatchTime(dinoName, mutations) {
+            let baseTime = dinosaurs[dinoName].time;
+            
+            mutations.forEach(mutation => {
+                switch(mutation) {
+                    case 'golden':
+                        baseTime *= 1.03;
+                        break;
+                    case 'giant':
+                        baseTime *= 1.08;
+                        break;
+                    case 'diamond':
+                        baseTime *= 1.15;
+                        break;
+                    case 'ruby':
+                        baseTime *= 1.30;
+                        break;
+                }
+            });
+            
+            return baseTime;
+        }
+
+        function updateIncubators() {
+            const incubators = document.querySelectorAll('.incubator');
+            const now = Date.now();
+            
+            incubators.forEach((incubator, index) => {
+                const egg = gameState.incubators[index];
+                
+                if (egg === null) {
+                    incubator.innerHTML = '';
+                    incubator.classList.remove('occupied');
+                    return;
+                }
+                
+                incubator.classList.add('occupied');
+                
+                const elapsed = now - egg.startTime;
+                const remaining = Math.max(0, egg.hatchTime - elapsed);
+                
+                if (remaining <= 0) {
+                    // Dinossauro nasceu
+                    hatchDinosaur(index);
+                    return;
+                }
+                
+                // Mostrar ovo e tempo
+                const hours = Math.floor(remaining / 3600000);
+                const minutes = Math.floor((remaining % 3600000) / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                
+                const mutationClass = egg.mutations.length > 0 ? egg.mutations[0] : 'common';
+                
+                incubator.innerHTML = `
+                    <div class="egg ${mutationClass}"></div>
+                    <div class="egg-info">
+                        <div>${egg.dino}</div>
+                        <div>${hours}h ${minutes}m ${seconds}s</div>
+                    </div>
+                `;
+            });
+        }
+
+        function hatchDinosaur(incubatorIndex) {
+            const egg = gameState.incubators[incubatorIndex];
+            
+            // Gerar estatísticas do dinossauro
+            const dino = {
+                name: egg.dino,
+                customName: egg.dino,
+                mutations: egg.mutations,
+                age: 0,
+                weight: generateWeight(egg.dino, egg.mutations),
+                size: generateSize(egg.dino, egg.mutations),
+                lifeExpectancy: generateLifeExpectancy(egg.dino, egg.mutations),
+                value: calculateValue(egg.dino, egg.mutations),
+                appearance: generateAppearance(egg.mutations),
+                birthTime: Date.now()
+            };
+            
+            gameState.inventory.push(dino);
+            gameState.incubators[incubatorIndex] = null;
+            
+            showNotification(`${egg.dino} nasceu! 🦕`);
+            updateIncubators();
+        }
+
+        function generateWeight(dinoName, mutations) {
+            const baseWeights = {
+                'Compsognato': 2.5, 'Microraptor': 1, 'Indoraptor': 300, 'Estegossauro': 2000,
+                'Indominus Rex': 4000, 'Velociraptor': 20, 'Pyroraptor': 25, 'Megalossauro': 1000,
+                'Triceratops': 6000, 'Uhtraraptor': 500, 'Parassaurolofo': 2500, 'Carnotauro': 1500,
+                'Anquilossauro': 6000, 'Sinoceratops': 4000, 'Paquicefalossauro': 400, 'Giganotossauro': 8000,
+                'Braquiossauro': 50000, 'Diplodoco': 15000, 'Majungassauro': 1500, 'Brontossauro': 15000,
+                'Tiranossauro Rex': 7000, 'Espinossauro': 10000
+            };
+            
+            let weight = baseWeights[dinoName] || 1000;
+            weight += (Math.random() - 0.5) * weight * 0.2; // ±20% variação
+            
+            mutations.forEach(mutation => {
+                if (mutation === 'golden') weight *= 1.05;
+                if (mutation === 'giant') weight *= 1.10;
+            });
+            
+            return Math.round(weight * 100) / 100;
+        }
+
+        function generateSize(dinoName, mutations) {
+            const baseSizes = {
+                'Compsognato': 1, 'Microraptor': 0.6, 'Indoraptor': 3.5, 'Estegossauro': 9,
+                'Indominus Rex': 15, 'Velociraptor': 2, 'Pyroraptor': 2.5, 'Megalossauro': 9,
+                'Triceratops': 9, 'Uhtraraptor': 7, 'Parassaurolofo': 10, 'Carnotauro': 8,
+                'Anquilossauro': 6, 'Sinoceratops': 6, 'Paquicefalossauro': 4.5, 'Giganotossauro': 13,
+                'Braquiossauro': 22, 'Diplodoco': 26, 'Majungassauro': 8, 'Brontossauro': 22,
+                'Tiranossauro Rex': 12, 'Espinossauro': 15
+            };
+            
+            let size = baseSizes[dinoName] || 5;
+            size += (Math.random() - 0.5) * size * 0.15; // ±15% variação
+            
+            mutations.forEach(mutation => {
+                if (mutation === 'giant') size *= 1.08;
+            });
+            
+            return Math.round(size * 100) / 100;
+        }
+
+        function generateLifeExpectancy(dinoName, mutations) {
+            let life = 20 + Math.random() * 30; // 20-50 anos base
+            
+            mutations.forEach(mutation => {
+                if (mutation === 'colorful') life *= 0.8;
+                if (mutation === 'diamond') life *= 1.2;
+                if (mutation === 'ruby') life *= 3.6; // +260%
+            });
+            
+            return Math.round(life);
+        }
+
+        function calculateValue(dinoName, mutations) {
+            let value = dinosaurs[dinoName].price;
+            
+            mutations.forEach(mutation => {
+                switch(mutation) {
+                    case 'golden':
+                        value *= 1.05;
+                        break;
+                    case 'giant':
+                        value *= 1.15;
+                        break;
+                    case 'colorful':
+                        value *= 1.15;
+                        break;
+                    case 'diamond':
+                        value *= 1.30;
+                        break;
+                    case 'ruby':
+                        value *= 2.13;
+                        break;
+                }
+            });
+            
+            // Variação aleatória ±10%
+            value += (Math.random() - 0.5) * value * 0.2;
+            
+            return Math.round(value);
+        }
+
+        function generateAppearance(mutations) {
+            const appearances = [
+                'Magnífico', 'Imponente', 'Elegante', 'Feroz', 'Majestoso',
+                'Intimidador', 'Gracioso', 'Poderoso', 'Esplêndido', 'Extraordinário'
+            ];
+            
+            if (mutations.includes('ruby')) return 'Lendário';
+            if (mutations.includes('diamond')) return 'Brilhante';
+            if (mutations.includes('colorful')) return 'Deslumbrante';
+            if (mutations.includes('golden')) return 'Dourado';
+            if (mutations.includes('giant')) return 'Colossal';
+            
+            return appearances[Math.floor(Math.random() * appearances.length)];
+        }
+
+        function showInventory() {
+            const grid = document.getElementById('inventoryGrid');
+            grid.innerHTML = '';
+            
+            if (gameState.inventory.length === 0) {
+                grid.innerHTML = '<p style="color: white; text-align: center; grid-column: 1/-1;">Nenhum dinossauro no inventário</p>';
+            } else {
+                gameState.inventory.forEach((dino, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'dino-card';
+                    card.onclick = () => selectDinoForStats(index);
+                    
+                    const mutationEmoji = dino.mutations.includes('ruby') ? '💎' :
+                                        dino.mutations.includes('diamond') ? '💠' :
+                                        dino.mutations.includes('golden') ? '🟨' :
+                                        dino.mutations.includes('giant') ? '🦣' :
+                                        dino.mutations.includes('colorful') ? '🌈' : '🦕';
+                    
+                    card.innerHTML = `
+                        <div style="font-size: 2rem;">${mutationEmoji}</div>
+                        <div style="font-weight: bold;">${dino.customName}</div>
+                        <div style="font-size: 0.8rem;">$${dino.value.toLocaleString()}</div>
+                    `;
+                    
+                    grid.appendChild(card);
+                });
+            }
+            
+            document.getElementById('inventoryModal').style.display = 'block';
+        }
+
+        function selectDinoForStats(index) {
+            gameState.selectedDino = index;
+            document.querySelectorAll('.dino-card').forEach(card => card.classList.remove('selected'));
+            document.querySelectorAll('.dino-card')[index].classList.add('selected');
+        }
+
+        function showStats() {
+            if (gameState.selectedDino === -1) {
+                showNotification('Selecione um dinossauro primeiro!', 'error');
+                return;
+            }
+            
+            const dino = gameState.inventory[gameState.selectedDino];
+            const age = Math.floor((Date.now() - dino.birthTime) / (1000 * 60 * 60 * 24)); // dias
+            
+            const statsContent = document.getElementById('statsContent');
+            statsContent.innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Nome:</label>
+                    <input type="text" value="${dino.customName}" onchange="updateDinoName(this.value)" 
+                           style="width: 100%; padding: 5px; border-radius: 5px; border: none;">
+                </div>
+                <p><strong>Idade:</strong> ${age} dias</p>
+                <p><strong>Peso:</strong> ${dino.weight} kg</p>
+                <p><strong>Tamanho:</strong> ${dino.size} metros</p>
+                <p><strong>Aparência:</strong> ${dino.appearance}</p>
+                <p><strong>Expectativa de Vida:</strong> ${dino.lifeExpectancy} anos</p>
+                <p><strong>Valor:</strong> $${dino.value.toLocaleString()}</p>
+                <p><strong>Mutações:</strong> ${dino.mutations.length > 0 ? dino.mutations.join(', ') : 'Nenhuma'}</p>
+            `;
+            
+            document.getElementById('statsModal').style.display = 'block';
+        }
+
+        function updateDinoName(newName) {
+            if (gameState.selectedDino !== -1) {
+                gameState.inventory[gameState.selectedDino].customName = newName;
+            }
+        }
+
+        function showCodes() {
+            document.getElementById('codeInput').value = '';
+            document.getElementById('codesModal').style.display = 'block';
+        }
+
+        function submitCode() {
+            const code = document.getElementById('codeInput').value.trim();
+            
+            if (gameState.usedCodes.includes(code)) {
+                showNotification('Código já foi usado!', 'error');
+                return;
+            }
+            
+            let success = false;
+            
+            switch(code) {
+                case '#Spike':
+                    gameState.money += 2500;
+                    showNotification('Você ganhou $2.500!');
+                    success = true;
+                    break;
+                    
+                case 'SiteB':
+                    const velociraptor = {
+                        name: 'Velociraptor',
+                        customName: 'Velociraptor',
+                        mutations: [],
+                        age: 0,
+                        weight: generateWeight('Velociraptor', []),
+                        size: generateSize('Velociraptor', []),
+                        lifeExpectancy: generateLifeExpectancy('Velociraptor', []),
+                        value: calculateValue('Velociraptor', []),
+                        appearance: generateAppearance([]),
+                        birthTime: Date.now()
+                    };
+                    gameState.inventory.push(velociraptor);
+                    showNotification('Você ganhou um Velociraptor!');
+                    success = true;
+                    break;
+                    
+                case  'TRex':
+                    if (Math.random() < 0.85) {
+                        gameState.money += 500;
+                        showNotification('Você ganhou $500!');
+                    } else {
+                        const trex = {
+                            name: 'Tiranossauro Rex',
+                            customName: 'Tiranossauro Rex',
+                            mutations: [],
+                            age: 0,
+                            weight: generateWeight('Tiranossauro Rex', []),
+                            size: generateSize('Tiranossauro Rex', []),
+                            lifeExpectancy: generateLifeExpectancy('Tiranossauro Rex', []),
+                            value: calculateValue('Tiranossauro Rex', []),
+                            appearance: generateAppearance([]),
+                            birthTime: Date.now()
+                        };
+                        gameState.inventory.push(trex);
+                        showNotification('Você ganhou um T-Rex! 🦖');
+                    }
+                    success = true;
+                    break;
+                    
+                case 'FilmeEmBreve':
+                    gameState.money += 4000;
+                    showNotification('Você ganhou $4.000!');
+                    success = true;
+                    break;
+                    
+                case 'Pequenos':
+                    stockBoosts.pequeno = 0.3;
+                    setTimeout(() => stockBoosts.pequeno = 0, 1800000); // 30 min
+                    showNotification('Dinossauros pequenos têm mais chance de aparecer!');
+                    success = true;
+                    break;
+                    
+                case 'Médios':
+                    stockBoosts.médio = 0.3;
+                    setTimeout(() => stockBoosts.médio = 0, 1800000);
+                    showNotification('Dinossauros médios têm mais chance de aparecer!');
+                    success = true;
+                    break;
+                    
+                case 'Grandes':
+                    stockBoosts.grande = 0.3;
+                    setTimeout(() => stockBoosts.grande = 0, 1800000);
+                    showNotification('Dinossauros grandes têm mais chance de aparecer!');
+                    success = true;
+                    break;
+                    
+                case 'Kumadre':
+                    const triceratops = {
+                        name: 'Triceratops',
+                        customName: 'Triceratops',
+                        mutations: [],
+                        age: 0,
+                        weight: generateWeight('Triceratops', []),
+                        size: generateSize('Triceratops', []),
+                        lifeExpectancy: generateLifeExpectancy('Triceratops', []),
+                        value: calculateValue('Triceratops', []),
+                        appearance: 'Magnífico',
+                        birthTime: Date.now()
+                    };
+                    gameState.inventory.push(triceratops);
+                    showNotification('Você ganhou um Triceratops magnífico!');
+                    success = true;
+                    break;
+                    
+                case 'Mike':
+                    // Aplicar boost temporário (simulado)
+                    showNotification('Dinossauros especiais ganharam +5% de vida por 1 hora!');
+                    success = true;
+                    break;
+                    
+                default:
+                    showNotification('Código inválido!', 'error');
+                    break;
+            }
+            
+            if (success) {
+                gameState.usedCodes.push(code);
+                updateMoneyDisplay();
+                closeModal('codesModal');
+            }
+        }
+
+        function showSellInterface() {
+            const grid = document.getElementById('sellInventoryGrid');
+            grid.innerHTML = '';
+            
+            if (gameState.inventory.length === 0) {
+                grid.innerHTML = '<p style="color: white; text-align: center; grid-column: 1/-1;">Nenhum dinossauro para vender</p>';
+            } else {
+                gameState.inventory.forEach((dino, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'dino-card';
+                    card.onclick = () => selectDinoForSale(index);
+                    
+                    const mutationEmoji = dino.mutations.includes('ruby') ? '💎' :
+                                        dino.mutations.includes('diamond') ? '💠' :
+                                        dino.mutations.includes('golden') ? '🟨' :
+                                        dino.mutations.includes('giant') ? '🦣' :
+                                        dino.mutations.includes('colorful') ? '🌈' : '🦕';
+                    
+                    card.innerHTML = `
+                        <div style="font-size: 2rem;">${mutationEmoji}</div>
+                        <div style="font-weight: bold;">${dino.customName}</div>
+                        <div style="font-size: 0.8rem;">$${dino.value.toLocaleString()}</div>
+                    `;
+                    
+                    grid.appendChild(card);
+                });
+            }
+            
+            document.getElementById('sellModal').style.display = 'block';
+        }
+
+        function selectDinoForSale(index) {
+            gameState.selectedDino = index;
+            document.querySelectorAll('#sellInventoryGrid .dino-card').forEach(card => card.classList.remove('selected'));
+            document.querySelectorAll('#sellInventoryGrid .dino-card')[index].classList.add('selected');
+        }
+
+        function sellRandom() {
+            if (gameState.inventory.length === 0) {
+                showNotification('Nenhum dinossauro para vender!', 'error');
+                return;
+            }
+            
+            const randomIndex = Math.floor(Math.random() * gameState.inventory.length);
+            const dino = gameState.inventory[randomIndex];
+            
+            gameState.money += dino.value;
+            gameState.inventory.splice(randomIndex, 1);
+            
+            updateMoneyDisplay();
+            showSellInterface(); // Atualizar interface
+            showNotification(`${dino.customName} vendido por $${dino.value.toLocaleString()}!`);
+        }
+
+        function sellAll() {
+            if (gameState.inventory.length === 0) {
+                showNotification('Nenhum dinossauro para vender!', 'error');
+                return;
+            }
+            
+            const totalValue = gameState.inventory.reduce((sum, dino) => sum + dino.value, 0);
+            const count = gameState.inventory.length;
+            
+            gameState.money += totalValue;
+            gameState.inventory = [];
+            
+            updateMoneyDisplay();
+            showSellInterface(); // Atualizar interface
+            showNotification(`${count} dinossauros vendidos por $${totalValue.toLocaleString()}!`);
+        }
+
+        function sellSelected() {
+            if (gameState.selectedDino === -1) {
+                showNotification('Selecione um dinossauro primeiro!', 'error');
+                return;
+            }
+            
+            const dino = gameState.inventory[gameState.selectedDino];
+            gameState.money += dino.value;
+            gameState.inventory.splice(gameState.selectedDino, 1);
+            gameState.selectedDino = -1;
+            
+            updateMoneyDisplay();
+            showSellInterface(); // Atualizar interface
+            showNotification(`${dino.customName} vendido por $${dino.value.toLocaleString()}!`);
+        }
+
+        // Konami Code
+        let konamiStep = 0;
+        let volumeDownCount = 0;
+        let screenTapCount = 0;
+        let eggHoldStart = 0;
+        let codesToggleCount = 0;
+
+        document.addEventListener('keydown', (e) => {
+            // Simular botão de volume (usando teclas)
+            if (e.key === 'ArrowDown') {
+                volumeDownCount++;
+                if (volumeDownCount === 2) {
+                    konamiStep = 1;
+                    setTimeout(() => { if (konamiStep === 1) konamiStep = 0; }, 5000);
+                }
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (konamiStep === 1) {
+                screenTapCount++;
+                if (screenTapCount === 3) {
+                    konamiStep = 2;
+                    setTimeout(() => { if (konamiStep === 2) konamiStep = 0; }, 5000);
+                }
+            }
+        });
+
+        document.addEventListener('mousedown', (e) => {
+            if (konamiStep === 2 && e.target.closest('.egg')) {
+                eggHoldStart = Date.now();
+            }
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (konamiStep === 2 && eggHoldStart > 0) {
+                const holdTime = Date.now() - eggHoldStart;
+                if (holdTime >= 5000) {
+                    konamiStep = 3;
+                    setTimeout(() => { if (konamiStep === 3) konamiStep = 0; }, 10000);
+                }
+                eggHoldStart = 0;
+            }
+        });
+
+        function checkKonamiCodesStep() {
+            if (konamiStep === 3) {
+                codesToggleCount++;
+                if (codesToggleCount === 6) { // 3 abrir + 3 fechar
+                    // Konami Code completo!
+                    const spinosaurus = {
+                        name: 'Espinossauro',
+                        customName: 'Espinossauro Lendário',
+                        mutations: ['ruby'],
+                        age: 0,
+                        weight: generateWeight('Espinossauro', ['ruby']),
+                        size: generateSize('Espinossauro', ['ruby']),
+                        lifeExpectancy: generateLifeExpectancy('Espinossauro', ['ruby']),
+                        value: calculateValue('Espinossauro', ['ruby']),
+                        appearance: 'Lendário',
+                        birthTime: Date.now()
+                    };
+                    
+                    gameState.inventory.push(spinosaurus);
+                    gameState.money += 5000000;
+                    
+                    updateMoneyDisplay();
+                    showNotification('🎉 KONAMI CODE! Você ganhou um Espinossauro Rubi e $5.000.000!');
+                    
+                    // Reset
+                    konamiStep = 0;
+                    volumeDownCount = 0;
+                    screenTapCount = 0;
+                    codesToggleCount = 0;
+                }
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            
+            // FEATURE 1: Parar o timer quando o modal da loja fechar
+            if (modalId === 'shopModal' && shopTimerInterval) {
+                clearInterval(shopTimerInterval);
+            }
+            
+            // Verificar step do Konami Code para códigos
+            if (modalId === 'codesModal') {
+                checkKonamiCodesStep();
+            }
+        }
+
+        // Sistema de salvamento
+        function saveGameState() {
+            const state = {
+                ...gameState,
+                lastExitTime: Date.now()
+            };
+            
+            // Simular salvamento (em um jogo real, seria localStorage ou servidor)
+            // localStorage.setItem('dinoGameState', JSON.stringify(state));
+        }
+
+        function loadGameState() {
+            // Simular carregamento do estado salvo
+            // const savedState = JSON.parse(localStorage.getItem('dinoGameState'));
+            // if (savedState) { gameState = savedState; }
+
+            const offlineTime = Date.now() - gameState.lastExitTime;
+            
+            gameState.incubators.forEach((egg, index) => {
+                if (egg) {
+                    egg.startTime -= offlineTime; // Simular progresso offline
+                }
+            });
+            
+            if (currentStock.length === 0) {
+                generateStock();
+            }
+        }
+
+        // Inicializar quando a página carregar
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
